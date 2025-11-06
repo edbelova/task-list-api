@@ -57,13 +57,13 @@ def one_task(app):
 def three_tasks(app):
     db.session.add_all([
         Task(title="Water the garden 🌷", 
-            description="", 
+            description="Give the flowers and plants a good soak before sunset.", 
             completed_at=None),
         Task(title="Answer forgotten email 📧", 
-            description="", 
+            description="Reply to the message from last week that’s been sitting in the inbox.", 
             completed_at=None),
         Task(title="Pay my outstanding tickets 😭", 
-            description="", 
+            description="Finally take care of those parking fines before they increase again.", 
             completed_at=None)
     ])
     db.session.commit()

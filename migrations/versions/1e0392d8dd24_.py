@@ -1,4 +1,4 @@
-"""empty message
+"""Create initial Goal and Task tables
 
 Revision ID: 1e0392d8dd24
 Revises: 

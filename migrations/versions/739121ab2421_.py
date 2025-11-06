@@ -1,4 +1,4 @@
-"""empty message
+"""Make Task.title column non-nullable
 
 Revision ID: 739121ab2421
 Revises: 1e0392d8dd24

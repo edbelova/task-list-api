@@ -1,15 +1,11 @@
-from flask import Blueprint, abort, make_response, request, current_app
 import os
+import requests
+
 from app import db
 from app.models.task import Task
-from flask import Response
 from datetime import datetime
-
+from flask import Blueprint, Response, request
 from app.routes.route_utilities import create_model, get_models_with_filters, validate_model
-
-# Config from environment
-SLACKBOT_TOKEN = os.getenv("SLACKBOT_TOKEN")
-SLACK_CHANNEL = os.getenv("SLACK_CHANNEL")
 
 bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
@@ -56,7 +52,17 @@ def patch_task(task_id):
 
     db.session.commit()
 
-    send_slack_message(SLACK_CHANNEL, f"OMG task '{task.title}' has been completed. Congrats!", SLACKBOT_TOKEN)
+    response = send_slack_message(None, f"Someone just completed the task {task.title}")
+
+    if response is not None:
+        # Slack may return 200 but contain { "ok": false } in the JSON body.
+        try:
+            ok = response.json().get("ok", False)
+        except ValueError:
+            ok = False
+
+        if response.status_code != 200 or not ok:
+            return Response(status=500, mimetype="application/json")
 
     return Response(status=204, mimetype="application/json")
 
@@ -70,12 +76,21 @@ def patch_task_incomplete(task_id):
 
     return Response(status=204, mimetype="application/json")
     
-def send_slack_message(channel, text, token):
-    request.post(
-        "https://slack.com/api/chat.postMessage", 
-        headers={"Authorization": f"Bearer {token}"}, 
-        json={
-            "channel": channel,
-            "text": text
-        }
-    )
+def send_slack_message(channel, text):
+
+    token = os.environ.get("SLACKBOT_TOKEN")
+
+    if channel is None:
+        channel = os.environ.get("SLACK_CHANNEL")
+
+    try:
+        return requests.post(
+            "https://slack.com/api/chat.postMessage", 
+            headers={"Authorization": f"Bearer {token}"}, 
+            json={
+                "channel": channel,
+                "text": text
+            }
+        )
+    except requests.RequestException:
+        return None

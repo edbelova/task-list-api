@@ -5,14 +5,14 @@ def validate_model(cls, model_id):
     try:
         model_id = int(model_id)
     except:
-        response = {"message": f"{cls.__name__} {model_id} invalid"}
+        response = {"details": f"{cls.__name__} {model_id} invalid"}
         abort(make_response(response , 400))
 
     query = db.select(cls).where(cls.id == model_id)
     model = db.session.scalar(query)
     
     if not model:
-        response = {"message": f"{cls.__name__} {model_id} not found"}
+        response = {"details": f"{cls.__name__} {model_id} not found"}
         abort(make_response(response, 404))
     
     return model
@@ -22,7 +22,7 @@ def create_model(cls, model_data):
         new_model = cls.from_dict(model_data)
         
     except KeyError as error:
-        response = {"message": f"Invalid request: missing {error.args[0]}"}
+        response = {"details": "Invalid data"}
         abort(make_response(response, 400))
     
     db.session.add(new_model)
@@ -32,12 +32,22 @@ def create_model(cls, model_data):
 
 def get_models_with_filters(cls, filters=None):
     query = db.select(cls)
-    
+    sort = None
+
     if filters:
         for attribute, value in filters.items():
             if hasattr(cls, attribute):
                 query = query.where(getattr(cls, attribute).ilike(f"%{value}%"))
+        sort = filters.get("sort")
 
-    models = db.session.scalars(query.order_by(cls.id))
+    if sort:
+        if sort.lower() == "asc":
+            query = query.order_by(cls.title.asc())
+        elif sort.lower() == "desc":
+            query = query.order_by(cls.title.desc())
+    else:
+        query = query.order_by(cls.id.asc())
+
+    models = db.session.scalars(query)
     models_response = [model.to_dict() for model in models]
     return models_response
