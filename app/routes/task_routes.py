@@ -54,23 +54,29 @@ def patch_task(task_id):
 
     response = send_slack_message(None, f"Someone just completed the task {task.title}")
 
-    if response is not None:
-        # Slack may return 200 but contain { "ok": false } in the JSON body.
+    if response is None:
         try:
-            ok = response.json().get("ok", False)
-        except ValueError:
-            ok = False
+            current_app.logger.error("Slack request failed with an exception; no response returned")
+        except Exception:
+            pass
+        return Response(status=500, mimetype="application/json")
 
-        if response.status_code != 200 or not ok:
-            try:
-                current_app.logger.error(
-                    "Slack post failed: status=%s, body=%s",
-                    response.status_code,
-                    response.text,
-                )
-            except Exception:
-                pass
-            return Response(status=500, mimetype="application/json")
+    # Slack may return 200 but contain { "ok": false } in the JSON body.
+    try:
+        ok = response.json().get("ok", False)
+    except ValueError:
+        ok = False
+
+    if response.status_code != 200 or not ok:
+        try:
+            current_app.logger.error(
+                "Slack post failed: status=%s, body=%s",
+                response.status_code,
+                response.text,
+            )
+        except Exception:
+            pass
+        return Response(status=500, mimetype="application/json")
 
     return Response(status=204, mimetype="application/json")
 
@@ -87,6 +93,11 @@ def patch_task_incomplete(task_id):
 def send_slack_message(channel, text):
 
     token = os.environ.get("SLACKBOT_TOKEN")
+    if not token:
+        try:
+            current_app.logger.error("SLACKBOT_TOKEN is missing or empty")
+        except Exception:
+            pass
 
     if channel is None:
         channel = os.environ.get("SLACK_CHANNEL")
@@ -104,8 +115,4 @@ def send_slack_message(channel, text):
             },
         )
     except requests.RequestException:
-        try:
-            current_app.logger.exception("Slack request raised an exception")
-        except Exception:
-            pass
         return None
