@@ -34,10 +34,6 @@ def update_goal(goal_id):
 @bp.delete("/<goal_id>")
 def delete_goal(goal_id):
     goal = validate_model(Goal, goal_id)
-
-    for task in goal.tasks:
-        task.goal_id = None
-
     db.session.delete(goal)
     db.session.commit()
     return Response(status=204, mimetype="application/json")
