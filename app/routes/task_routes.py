@@ -93,12 +93,15 @@ def send_slack_message(channel, text):
 
     try:
         return requests.post(
-            "https://slack.com/api/chat.postMessage", 
-            headers={"Authorization": f"Bearer {token}"}, 
+            "https://slack.com/api/chat.postMessage",
+            headers={
+                "Authorization": f"Bearer {token}",
+                "Content-Type": "application/json; charset=utf-8",
+            },
             json={
                 "channel": channel,
-                "text": text
-            }
+                "text": text,
+            },
         )
     except requests.RequestException:
         try:
