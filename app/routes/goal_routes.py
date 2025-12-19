@@ -45,11 +45,7 @@ def create_task_with_goal(goal_id):
     data = request.get_json()
     task_ids = data.get("task_ids")
 
-    goal.tasks = []
-
-    for task_id in task_ids:
-        task = validate_model(Task, task_id)
-        goal.tasks.append(task)
+    goal.tasks = [validate_model(Task, task_id) for task_id in task_ids]
 
     db.session.commit()
 
