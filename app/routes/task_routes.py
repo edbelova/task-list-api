@@ -9,6 +9,8 @@ from app.routes.route_utilities import create_model, get_models_with_filters, va
 
 bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
 
+SLACK_ENDPOINT = "https://slack.com/api/chat.postMessage"
+
 @bp.post("")
 def create_task():
     request_body = request.get_json()
@@ -104,7 +106,7 @@ def send_slack_message(channel, text):
 
     try:
         return requests.post(
-            "https://slack.com/api/chat.postMessage",
+            SLACK_ENDPOINT,
             headers={
                 "Authorization": f"Bearer {token}",
                 "Content-Type": "application/json; charset=utf-8",
