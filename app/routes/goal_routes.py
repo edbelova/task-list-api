@@ -59,4 +59,4 @@ def create_task_with_goal(goal_id):
 def get_tasks_by_goal(goal_id):
     goal = validate_model(Goal, goal_id)
     task_list = [task.to_dict() for task in goal.tasks]
-    return goal.to_dict(), 200
+    return {"id": goal.id, "title": goal.title, "tasks": task_list}, 200
