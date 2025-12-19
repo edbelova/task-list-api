@@ -6,7 +6,7 @@ def validate_model(cls, model_id):
         model_id = int(model_id)
     except:
         response = {"details": f"{cls.__name__} {model_id} invalid"}
-        abort(make_response(response , 400))
+        abort(make_response(response, 400))
 
     query = db.select(cls).where(cls.id == model_id)
     model = db.session.scalar(query)
