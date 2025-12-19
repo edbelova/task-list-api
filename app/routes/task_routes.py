@@ -4,7 +4,7 @@ import requests
 from app import db
 from app.models.task import Task
 from datetime import datetime
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, current_app
 from app.routes.route_utilities import create_model, get_models_with_filters, validate_model
 
 bp = Blueprint("tasks_bp", __name__, url_prefix="/tasks")
@@ -62,6 +62,14 @@ def patch_task(task_id):
             ok = False
 
         if response.status_code != 200 or not ok:
+            try:
+                current_app.logger.error(
+                    "Slack post failed: status=%s, body=%s",
+                    response.status_code,
+                    response.text,
+                )
+            except Exception:
+                pass
             return Response(status=500, mimetype="application/json")
 
     return Response(status=204, mimetype="application/json")
@@ -93,4 +101,8 @@ def send_slack_message(channel, text):
             }
         )
     except requests.RequestException:
+        try:
+            current_app.logger.exception("Slack request raised an exception")
+        except Exception:
+            pass
         return None
